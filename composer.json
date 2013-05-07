@@ -1,0 +1,21 @@
+{
+    "name": "barryvdh/laravel-migration-generator",
+    "description": "",
+    "authors": [
+        {
+            "name": "Barry vd. Heuvel",
+            "email": "barryvdh@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "4.0.x",
+        "way/generators": "dev-master"
+    },
+    "autoload": {
+        "psr-0": {
+            "Barryvdh\\MigrationGenerator": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
