@@ -46,10 +46,11 @@ class MigrationGeneratorCommand extends Command
     public function fire()
     {
         $tables = explode(',', $this->argument('tables'));
+        $prefix = \DB::getTablePrefix();
 
         foreach($tables as $table){
             $name = 'create_'.$table.'_table';
-            $fields = $this->detectColumns($table);
+            $fields = $this->detectColumns($prefix.$table);
             $path =  $this->option('path') . '/' .$name.'.php';
 
             $created = $this->generator
