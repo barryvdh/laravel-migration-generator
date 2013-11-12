@@ -70,6 +70,8 @@ class MigrationGeneratorCommand extends Command
         $fields = array();
 
         $schema = \DB::getDoctrineSchemaManager($table);
+        
+        $schema->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
 
         $indexes = $schema->listTableIndexes($table);
         foreach ($indexes as $index) {
