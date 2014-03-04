@@ -38,6 +38,17 @@ class MigrationGeneratorCommand extends Command
         'enum' => 'string'
     );
 
+    /**
+     * Maps possible field types to matching field types
+     * @var array
+     */
+    protected $fieldTypeMap = array(
+        'guid' => 'string',
+        'bigint' => 'integer',
+        'littleint' => 'integer',
+        'datetimetz' => 'datetime'
+    );
+
     public function __construct(MigrationGenerator $generator)
     {
         parent::__construct();
@@ -54,6 +65,7 @@ class MigrationGeneratorCommand extends Command
     public function fire()
     {
         $this->setRegisteredTypes($this->option('register-types'));
+        $this->setFieldTypeMap($this->option('type-map'));
 
         $tables = explode(',', $this->argument('tables'));
         $prefix = \DB::getTablePrefix();
@@ -100,17 +112,8 @@ class MigrationGeneratorCommand extends Command
                 $type =  $column->getType()->getName();
                 $length = $column->getLength();
                 $default = $column->getDefault();
-                switch($type){
-                    case 'guid':
-                        $type = 'string';
-                        break;
-                    case 'bigint':
-                    case 'smallint':
-                        $type = 'integer';
-                        break;
-                    case 'datetimetz':
-                        $type = 'datetime';
-                        break;
+                if(isset($this->fieldTypeMap[$type])) {
+                    $type = $this->fieldTypeMap[$type];
                 }
                 if(!in_array($name, array('id', 'created_at', 'updated_at'))){
                     $field = "$name:$type";
@@ -146,6 +149,22 @@ class MigrationGeneratorCommand extends Command
     }
 
     /**
+     * Converts the type-map option values into a usable array
+     * and merges it with our default values
+     *
+     * @param  string $typeList key:value,key2:value
+     * @return void
+     */
+    protected function setFieldTypeMap($typeList)
+    {
+        //Turns a key:value,key2:value string into key=value&key2=value string
+        //so it can be parsed like a query string
+        parse_str(str_replace(",", "&", str_replace(':','=',$typeList)), $types);
+        $this->fieldTypeMap = array_merge($this->fieldTypeMap,$types);
+    }
+
+
+    /**
      * Get the console command arguments.
      *
      * @return array
@@ -167,7 +186,8 @@ class MigrationGeneratorCommand extends Command
     {
         return array(
             array('path', null, InputOption::VALUE_OPTIONAL, 'The path to store the migration', 'app/database/migrations'),
-            array('register-types', null, InputOption::VALUE_OPTIONAL, 'Doctrine types to register')
+            array('register-types', null, InputOption::VALUE_OPTIONAL, 'Additional Doctrine type mappings'),
+            array('type-map', null, InputOption::VALUE_OPTIONAL, 'Additional field type mappings')
         );
     }
 
