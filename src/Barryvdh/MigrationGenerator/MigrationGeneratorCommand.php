@@ -30,6 +30,14 @@ class MigrationGeneratorCommand extends Command
      */
     protected $generator;
 
+    /**
+     * Maps possible field types to matching Doctrine types
+     * @var array
+     */
+    protected $registeredTypes = array(
+        'enum' => 'string'
+    );
+
     public function __construct(MigrationGenerator $generator)
     {
         parent::__construct();
@@ -45,6 +53,8 @@ class MigrationGeneratorCommand extends Command
      */
     public function fire()
     {
+        $this->setRegisteredTypes($this->option('register-types'));
+
         $tables = explode(',', $this->argument('tables'));
         $prefix = \DB::getTablePrefix();
 
@@ -70,8 +80,10 @@ class MigrationGeneratorCommand extends Command
         $fields = array();
 
         $schema = \DB::getDoctrineSchemaManager($table);
-        
-        $schema->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
+
+        foreach ($this->registeredTypes as $convertFrom=>$convertTo) {
+            $schema->getDatabasePlatform()->registerDoctrineTypeMapping($convertFrom, $convertTo);
+        }
 
         $indexes = $schema->listTableIndexes($table);
         foreach ($indexes as $index) {
@@ -118,6 +130,20 @@ class MigrationGeneratorCommand extends Command
         return implode(', ', $fields);
     }
 
+    /**
+     * Converts the register-types option values into a usable array
+     * and merges it with our default values
+     *
+     * @param  string $typeList key:value,key2:value
+     * @return void
+     */
+    protected function setRegisteredTypes($typeList)
+    {
+        //Turns a key:value,key2:value string into key=value&key2=value string
+        //so it can be parsed like a query string
+        parse_str(str_replace(",", "&", str_replace(':','=',$typeList)), $types);
+        $this->registeredTypes = array_merge($this->registeredTypes,$types);
+    }
 
     /**
      * Get the console command arguments.
@@ -140,7 +166,8 @@ class MigrationGeneratorCommand extends Command
     protected function getOptions()
     {
         return array(
-            array('path', null, InputOption::VALUE_OPTIONAL, 'The path to store the migration', 'app/database/migrations')
+            array('path', null, InputOption::VALUE_OPTIONAL, 'The path to store the migration', 'app/database/migrations'),
+            array('register-types', null, InputOption::VALUE_OPTIONAL, 'Doctrine types to register')
         );
     }
 
