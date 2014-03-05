@@ -30,13 +30,30 @@ class MigrationGeneratorCommand extends Command
      */
     protected $generator;
 
-    public function __construct(MigrationGenerator $generator)
+    /**
+     * Maps possible field types to matching Doctrine types
+     * @var array
+     */
+    protected $registerTypes = array();
+
+    /**
+     * Maps database field types to alternate types
+     * @var array
+     */
+    protected $fieldTypeMap = array();
+
+    public function __construct(MigrationGenerator $generator, $config = array())
     {
         parent::__construct();
 
         $this->generator = $generator;
-    }
 
+        foreach($config as $key=>$value){
+            if (property_exists($this, $key)){
+                $this->$key = $value;
+            }
+        }
+    }
 
     /**
      * Execute the console command.
@@ -70,8 +87,10 @@ class MigrationGeneratorCommand extends Command
         $fields = array();
 
         $schema = \DB::getDoctrineSchemaManager($table);
-        
-        $schema->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
+
+        foreach ($this->registerTypes as $convertFrom=>$convertTo) {
+            $schema->getDatabasePlatform()->registerDoctrineTypeMapping($convertFrom, $convertTo);
+        }
 
         $indexes = $schema->listTableIndexes($table);
         foreach ($indexes as $index) {
@@ -88,17 +107,8 @@ class MigrationGeneratorCommand extends Command
                 $type =  $column->getType()->getName();
                 $length = $column->getLength();
                 $default = $column->getDefault();
-                switch($type){
-                    case 'guid':
-                        $type = 'string';
-                        break;
-                    case 'bigint':
-                    case 'smallint':
-                        $type = 'integer';
-                        break;
-                    case 'datetimetz':
-                        $type = 'datetime';
-                        break;
+                if(isset($this->fieldTypeMap[$type])) {
+                    $type = $this->fieldTypeMap[$type];
                 }
                 if(!in_array($name, array('id', 'created_at', 'updated_at'))){
                     $field = "$name:$type";
@@ -117,7 +127,6 @@ class MigrationGeneratorCommand extends Command
         }
         return implode(', ', $fields);
     }
-
 
     /**
      * Get the console command arguments.

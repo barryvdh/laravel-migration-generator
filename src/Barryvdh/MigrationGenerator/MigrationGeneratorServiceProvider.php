@@ -35,8 +35,9 @@ class MigrationGeneratorServiceProvider extends ServiceProvider {
         {
             $cache = new Cache($app['files']);
             $generator = new Generators\MigrationGenerator($app['files'], $cache);
+            $config = $app['config']->get('laravel-migration-generator::config');
 
-            return new MigrationGeneratorCommand($generator);
+            return new MigrationGeneratorCommand($generator,$config);
         });
         $this->commands('command.migration-generator');
 	}
