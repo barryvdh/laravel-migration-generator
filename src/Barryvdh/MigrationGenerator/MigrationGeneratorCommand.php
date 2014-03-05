@@ -34,28 +34,26 @@ class MigrationGeneratorCommand extends Command
      * Maps possible field types to matching Doctrine types
      * @var array
      */
-    protected $registeredTypes = array(
-        'enum' => 'string'
-    );
+    protected $registerTypes = array();
 
     /**
-     * Maps possible field types to matching field types
+     * Maps database field types to alternate types
      * @var array
      */
-    protected $fieldTypeMap = array(
-        'guid' => 'string',
-        'bigint' => 'integer',
-        'littleint' => 'integer',
-        'datetimetz' => 'datetime'
-    );
+    protected $fieldTypeMap = array();
 
-    public function __construct(MigrationGenerator $generator)
+    public function __construct(MigrationGenerator $generator, $config = array())
     {
         parent::__construct();
 
         $this->generator = $generator;
-    }
 
+        foreach($config as $key=>$value){
+            if (property_exists($this, $key)){
+                $this->$key = $value;
+            }
+        }
+    }
 
     /**
      * Execute the console command.
@@ -64,9 +62,6 @@ class MigrationGeneratorCommand extends Command
      */
     public function fire()
     {
-        $this->setRegisteredTypes($this->option('register-types'));
-        $this->setFieldTypeMap($this->option('type-map'));
-
         $tables = explode(',', $this->argument('tables'));
         $prefix = \DB::getTablePrefix();
 
@@ -93,7 +88,7 @@ class MigrationGeneratorCommand extends Command
 
         $schema = \DB::getDoctrineSchemaManager($table);
 
-        foreach ($this->registeredTypes as $convertFrom=>$convertTo) {
+        foreach ($this->registerTypes as $convertFrom=>$convertTo) {
             $schema->getDatabasePlatform()->registerDoctrineTypeMapping($convertFrom, $convertTo);
         }
 
@@ -134,37 +129,6 @@ class MigrationGeneratorCommand extends Command
     }
 
     /**
-     * Converts the register-types option values into a usable array
-     * and merges it with our default values
-     *
-     * @param  string $typeList key:value,key2:value
-     * @return void
-     */
-    protected function setRegisteredTypes($typeList)
-    {
-        //Turns a key:value,key2:value string into key=value&key2=value string
-        //so it can be parsed like a query string
-        parse_str(str_replace(",", "&", str_replace(':','=',$typeList)), $types);
-        $this->registeredTypes = array_merge($this->registeredTypes,$types);
-    }
-
-    /**
-     * Converts the type-map option values into a usable array
-     * and merges it with our default values
-     *
-     * @param  string $typeList key:value,key2:value
-     * @return void
-     */
-    protected function setFieldTypeMap($typeList)
-    {
-        //Turns a key:value,key2:value string into key=value&key2=value string
-        //so it can be parsed like a query string
-        parse_str(str_replace(",", "&", str_replace(':','=',$typeList)), $types);
-        $this->fieldTypeMap = array_merge($this->fieldTypeMap,$types);
-    }
-
-
-    /**
      * Get the console command arguments.
      *
      * @return array
@@ -185,9 +149,7 @@ class MigrationGeneratorCommand extends Command
     protected function getOptions()
     {
         return array(
-            array('path', null, InputOption::VALUE_OPTIONAL, 'The path to store the migration', 'app/database/migrations'),
-            array('register-types', null, InputOption::VALUE_OPTIONAL, 'Additional Doctrine type mappings'),
-            array('type-map', null, InputOption::VALUE_OPTIONAL, 'Additional field type mappings')
+            array('path', null, InputOption::VALUE_OPTIONAL, 'The path to store the migration', 'app/database/migrations')
         );
     }
 
