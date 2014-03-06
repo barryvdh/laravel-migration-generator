@@ -1,6 +1,8 @@
 {
     "name": "barryvdh/laravel-migration-generator",
-    "description": "",
+    "description": "Generate migrations based on existing database",
+    "keywords": ["laravel", "migration", "generator", "artisan"],
+    "license": "MIT",
     "authors": [
         {
             "name": "Barry vd. Heuvel",
