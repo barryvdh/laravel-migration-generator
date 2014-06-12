@@ -6,6 +6,10 @@ Require this package in your composer.json:
 
     "barryvdh/laravel-migration-generator": "dev-master"
 
+And update dependencies using composer:
+
+    composer update
+
 And add the ServiceProvider to the providers array in app/config/app.php
 
     'Barryvdh\MigrationGenerator\MigrationGeneratorServiceProvider',
