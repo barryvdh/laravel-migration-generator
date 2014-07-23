@@ -2,6 +2,8 @@
 
 ### Generate migrations based on existing tables
 
+** You might want to checkout https://github.com/Xethron/migrations-generator which is similar to this package, but is developed more recently and is using way/generators version 2.x. My package is still on 1.x and I'll have to see when/if I can upgrade. This package does still work, but isn't actively supported currently **
+
 Require this package in your composer.json:
 
     "barryvdh/laravel-migration-generator": "dev-master"
